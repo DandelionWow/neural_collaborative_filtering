@@ -31,7 +31,7 @@ def parse_args():
                         help='Input data path.')
     parser.add_argument('--dataset', nargs='?', default='ml-1m',
                         help='Choose a dataset.')
-    parser.add_argument('--epochs', type=int, default=100,
+    parser.add_argument('--epochs', type=int, default=20,
                         help='Number of epochs.')
     parser.add_argument('--batch_size', type=int, default=256,
                         help='Batch size.')
@@ -53,9 +53,9 @@ def parse_args():
                         help='Show performance per X iterations')
     parser.add_argument('--out', type=int, default=1,
                         help='Whether to save the trained model.')
-    parser.add_argument('--mf_pretrain', nargs='?', default='',
+    parser.add_argument('--mf_pretrain', nargs='?', default='Pretrain/ml-1m_GMF_8_1682175300.h5',
                         help='Specify the pretrain model file for MF part. If empty, no pretrain will be used')
-    parser.add_argument('--mlp_pretrain', nargs='?', default='',
+    parser.add_argument('--mlp_pretrain', nargs='?', default='Pretrain/ml-1m_MLP_[64,32,16,8]_1682209580.h5',
                         help='Specify the pretrain model file for MLP part. If empty, no pretrain will be used')
     return parser.parse_args()
 
@@ -196,6 +196,7 @@ if __name__ == '__main__':
         mlp_model = MLP.get_model(num_users,num_items, layers, reg_layers)
         mlp_model.load_weights(mlp_pretrain)
         model = load_pretrain_model(model, gmf_model, mlp_model, len(layers))
+        model.compile(optimizer=SGD(lr=learning_rate), loss='binary_crossentropy')
         print("Load pretrained GMF (%s) and MLP (%s) models done. " %(mf_pretrain, mlp_pretrain))
         
     # Init performance
@@ -215,7 +216,7 @@ if __name__ == '__main__':
         # Training
         hist = model.fit([np.array(user_input), np.array(item_input)], #input
                          np.array(labels), # labels 
-                         batch_size=batch_size, nb_epoch=1, verbose=0, shuffle=True)
+                         batch_size=batch_size, nb_epoch=1, verbose=verbose, shuffle=True)
         t2 = time()
         
         # Evaluation
